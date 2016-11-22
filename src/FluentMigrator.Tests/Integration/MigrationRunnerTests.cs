@@ -512,6 +512,40 @@ namespace FluentMigrator.Tests.Integration
         }
 
         [Test]
+        public void MigrateUpWithAnyTaggedMigrationsShouldApplyAllMatchedMigrations()
+        {
+            ExecuteWithSupportedProcessors(processor =>
+            {
+                var assembly = typeof(TenantATable).Assembly;
+
+                var runnerContext = new RunnerContext(new TextWriterAnnouncer(System.Console.Out))
+                {
+                    Namespace = typeof(TenantATable).Namespace,
+                    Tags = new[] {"TenanctC", "TenantD"}
+                };
+
+                var runner = new MigrationRunner(assembly, runnerContext, processor);
+
+                try
+                {
+                    runner.MigrateUp(false);
+
+                    processor.TableExists(null, "TenantATable").ShouldBeFalse();
+                    processor.TableExists(null, "TenantAandBTable").ShouldBeFalse();
+                    processor.TableExists(null, "TenantBTable").ShouldBeFalse();
+                    processor.TableExists(null, "TenantCTable").ShouldBeTrue();
+                    processor.TableExists(null, "TenantCAndDTable").ShouldBeTrue();
+                    processor.TableExists(null, "TenantDTable").ShouldBeTrue();
+                    processor.TableExists(null, "NormalTable").ShouldBeTrue();
+                }
+                finally
+                {
+                    runner.RollbackToVersion(0);
+                }
+            });
+        }
+
+        [Test]
         public void MigrateUpWithTaggedMigrationsShouldOnlyApplyMatchedMigrations()
         {
             ExecuteWithSupportedProcessors(processor =>
@@ -531,9 +565,9 @@ namespace FluentMigrator.Tests.Integration
                     runner.MigrateUp(false);
 
                     processor.TableExists(null, "TenantATable").ShouldBeTrue();
-                    processor.TableExists(null, "NormalTable").ShouldBeTrue();
-                    processor.TableExists(null, "TenantBTable").ShouldBeFalse();
                     processor.TableExists(null, "TenantAandBTable").ShouldBeTrue();
+                    processor.TableExists(null, "TenantBTable").ShouldBeFalse();
+                    processor.TableExists(null, "NormalTable").ShouldBeTrue();
                 }
                 finally
                 {
