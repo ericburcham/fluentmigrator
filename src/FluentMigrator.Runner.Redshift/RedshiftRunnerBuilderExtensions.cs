@@ -1,5 +1,5 @@
 #region License
-// Copyright (c) 2018, FluentMigrator Project
+// Copyright (c) 2018, Fluent Migrator Project
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,7 +15,6 @@
 #endregion
 
 using FluentMigrator.Runner.Generators.Redshift;
-using FluentMigrator.Runner.Processors;
 using FluentMigrator.Runner.Processors.Redshift;
 
 using Microsoft.Extensions.DependencyInjection;
@@ -39,10 +38,9 @@ namespace FluentMigrator.Runner
                 .AddScoped<RedshiftProcessor>()
                 .AddScoped<IMigrationProcessor>(sp => sp.GetRequiredService<RedshiftProcessor>())
                 .AddScoped<RedshiftQuoter>()
+                .AddScoped<IRedshiftTypeMap>(sp => new RedshiftTypeMap())
                 .AddScoped<RedshiftGenerator>()
                 .AddScoped<IMigrationGenerator>(sp => sp.GetRequiredService<RedshiftGenerator>());
-
-            MigrationProcessorFactoryProvider.Register(new RedshiftProcessorFactory());
 
             return builder;
         }

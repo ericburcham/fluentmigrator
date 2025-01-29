@@ -1,5 +1,5 @@
 #region License
-// Copyright (c) 2007-2018, FluentMigrator Project
+// Copyright (c) 2007-2024, Fluent Migrator Project
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ using Shouldly;
 namespace FluentMigrator.Tests.Unit.Generators.Redshift
 {
     [TestFixture]
+    [Category("Redshift")]
     public sealed class RedshiftDataTests : BaseDataTests
     {
         private RedshiftGenerator _generator;
@@ -40,7 +41,7 @@ namespace FluentMigrator.Tests.Unit.Generators.Redshift
             expression.SchemaName = "TestSchema";
 
             var result = _generator.Generate(expression);
-            result.ShouldBe("DELETE FROM \"TestSchema\".\"TestTable1\";");
+            result.ShouldBe("DELETE FROM \"TestSchema\".\"TestTable1\" WHERE 1 = 1;");
         }
 
         [Test]
@@ -49,7 +50,7 @@ namespace FluentMigrator.Tests.Unit.Generators.Redshift
             var expression = GeneratorTestHelper.GetDeleteDataAllRowsExpression();
 
             var result = _generator.Generate(expression);
-            result.ShouldBe("DELETE FROM \"public\".\"TestTable1\";");
+            result.ShouldBe("DELETE FROM \"public\".\"TestTable1\" WHERE 1 = 1;");
         }
 
         [Test]
@@ -60,7 +61,7 @@ namespace FluentMigrator.Tests.Unit.Generators.Redshift
 
             var result = _generator.Generate(expression);
             result.ShouldBe(
-                "DELETE FROM \"TestSchema\".\"TestTable1\" WHERE \"Name\" = 'Just''in' AND \"Website\" IS NULL;DELETE FROM \"TestSchema\".\"TestTable1\" WHERE \"Website\" = 'github.com';");
+                "DELETE FROM \"TestSchema\".\"TestTable1\" WHERE \"Name\" = 'Just''in' AND \"Website\" IS NULL; DELETE FROM \"TestSchema\".\"TestTable1\" WHERE \"Website\" = 'github.com';");
         }
 
         [Test]
@@ -70,7 +71,7 @@ namespace FluentMigrator.Tests.Unit.Generators.Redshift
 
             var result = _generator.Generate(expression);
             result.ShouldBe(
-                "DELETE FROM \"public\".\"TestTable1\" WHERE \"Name\" = 'Just''in' AND \"Website\" IS NULL;DELETE FROM \"public\".\"TestTable1\" WHERE \"Website\" = 'github.com';");
+                "DELETE FROM \"public\".\"TestTable1\" WHERE \"Name\" = 'Just''in' AND \"Website\" IS NULL; DELETE FROM \"public\".\"TestTable1\" WHERE \"Website\" = 'github.com';");
         }
 
         [Test]

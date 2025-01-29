@@ -1,6 +1,6 @@
 #region License
 //
-// Copyright (c) 2007-2018, Sean Chambers <schambers80@gmail.com>
+// Copyright (c) 2007-2024, Fluent Migrator Project
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,11 +25,8 @@ using FluentMigrator.Expressions;
 using FluentMigrator.Infrastructure;
 using FluentMigrator.Runner.Initialization;
 using FluentMigrator.Infrastructure.Extensions;
-using FluentMigrator.Runner.Conventions;
 using FluentMigrator.Runner.Exceptions;
-using FluentMigrator.Runner.Logging;
 using FluentMigrator.Runner.Processors;
-using FluentMigrator.Runner.VersionTableInfo;
 
 using JetBrains.Annotations;
 
@@ -57,12 +54,6 @@ namespace FluentMigrator.Runner
         [NotNull]
         private readonly Lazy<IVersionLoader> _versionLoader;
 
-        [NotNull]
-        [Obsolete]
-#pragma warning disable 612
-        private readonly IAssemblyCollection _migrationAssemblies;
-#pragma warning restore 612
-
         [CanBeNull]
         private readonly RunnerOptions _options;
 
@@ -80,106 +71,6 @@ namespace FluentMigrator.Runner
         /// <summary>
         /// Initializes a new instance of the <see cref="MigrationRunner"/> class.
         /// </summary>
-        /// <param name="assembly">The assembly to scan for migrations, etc...</param>
-        /// <param name="runnerContext">The runner context</param>
-        /// <param name="processor">The migration processor</param>
-        [Obsolete]
-        public MigrationRunner([NotNull] Assembly assembly, [NotNull] IRunnerContext runnerContext, [NotNull] IMigrationProcessor processor)
-            : this(assembly, runnerContext, processor, conventionSet: null)
-        {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="MigrationRunner"/> class.
-        /// </summary>
-        /// <param name="assembly">The assembly to scan for migrations, etc...</param>
-        /// <param name="runnerContext">The runner context</param>
-        /// <param name="processor">The migration processor</param>
-        /// <param name="conventionSet">The expression convention set</param>
-        [Obsolete]
-        public MigrationRunner([NotNull] Assembly assembly, [NotNull] IRunnerContext runnerContext, [NotNull] IMigrationProcessor processor, [CanBeNull] IConventionSet conventionSet)
-            : this(new SingleAssembly(assembly), runnerContext, processor, versionTableMetaData: null, migrationRunnerConventions: null, conventionSet, migrationScopeHandler: null)
-        {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="MigrationRunner"/> class.
-        /// </summary>
-        /// <param name="assemblies">The collection of assemblies to scan for migrations, etc...</param>
-        /// <param name="runnerContext">The runner context</param>
-        /// <param name="processor">The migration processor</param>
-        /// <param name="versionTableMetaData">The version table metadata</param>
-        /// <param name="migrationRunnerConventions">The custom migration runner conventions</param>
-        [Obsolete]
-        public MigrationRunner(
-            [NotNull] IAssemblyCollection assemblies, [NotNull] IRunnerContext runnerContext,
-            [NotNull] IMigrationProcessor processor, IVersionTableMetaData versionTableMetaData = null,
-            [CanBeNull] IMigrationRunnerConventions migrationRunnerConventions = null)
-            : this(assemblies, runnerContext, processor, versionTableMetaData, migrationRunnerConventions, conventionSet: null, migrationScopeHandler: null)
-        {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="MigrationRunner"/> class.
-        /// </summary>
-        /// <param name="assemblies">The collection of assemblies to scan for migrations, etc...</param>
-        /// <param name="runnerContext">The runner context</param>
-        /// <param name="processor">The migration processor</param>
-        /// <param name="versionTableMetaData">The version table metadata</param>
-        /// <param name="migrationRunnerConventions">The custom migration runner conventions</param>
-        /// <param name="conventionSet">The expression convention set</param>
-        /// <param name="migrationScopeHandler">The migration scope handler</param>
-        [Obsolete]
-        public MigrationRunner(
-            [NotNull] IAssemblyCollection assemblies, [NotNull] IRunnerContext runnerContext,
-            [NotNull] IMigrationProcessor processor, [CanBeNull] IVersionTableMetaData versionTableMetaData,
-            [CanBeNull] IMigrationRunnerConventions migrationRunnerConventions, [CanBeNull] IConventionSet conventionSet,
-            [CanBeNull] IMigrationScopeManager migrationScopeHandler = null)
-        {
-            _migrationAssemblies = assemblies;
-            _logger = new AnnouncerFluentMigratorLogger(runnerContext.Announcer);
-            _stopWatch = runnerContext.StopWatch;
-            _processorOptions = new ProcessorOptions(runnerContext);
-
-            Processor = processor;
-            RunnerContext = runnerContext;
-
-            var migrationRunnerConventionsAccessor = new AssemblySourceMigrationRunnerConventionsAccessor(
-                serviceProvider: null,
-                new AssemblySource(() => assemblies));
-            Conventions = migrationRunnerConventions ?? migrationRunnerConventionsAccessor.MigrationRunnerConventions;
-
-            var convSet = conventionSet ?? new DefaultConventionSet(runnerContext);
-
-            _migrationScopeManager = migrationScopeHandler ?? new MigrationScopeHandler(Processor);
-            _migrationValidator = new MigrationValidator(_logger, convSet);
-            MigrationLoader = new DefaultMigrationInformationLoader(Conventions, _migrationAssemblies,
-                                                                    runnerContext.Namespace,
-                                                                    runnerContext.NestedNamespaces, runnerContext.Tags);
-            ProfileLoader = new ProfileLoader(runnerContext, this, Conventions);
-            MaintenanceLoader = new MaintenanceLoader(_migrationAssemblies, runnerContext.Tags, Conventions);
-
-            if (runnerContext.NoConnection)
-            {
-                _versionLoader = new Lazy<IVersionLoader>(
-                    () => new ConnectionlessVersionLoader(
-                        this,
-                        _migrationAssemblies,
-                        convSet,
-                        Conventions,
-                        runnerContext,
-                        versionTableMetaData));
-            }
-            else
-            {
-                _versionLoader = new Lazy<IVersionLoader>(
-                    () => new VersionLoader(this, _migrationAssemblies, convSet, Conventions, runnerContext, versionTableMetaData));
-            }
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="MigrationRunner"/> class.
-        /// </summary>
         /// <param name="options">The migration runner options</param>
         /// <param name="processorOptions">The migration processor options</param>
         /// <param name="profileLoader">The profile loader</param>
@@ -192,6 +83,7 @@ namespace FluentMigrator.Runner
         /// <param name="assemblySource">The assemblies to scan for migrations, etc...</param>
         /// <param name="migrationValidator">The validator for migrations</param>
         /// <param name="serviceProvider">The service provider</param>
+        [Obsolete]
         public MigrationRunner(
             [NotNull] IOptions<RunnerOptions> options,
             [NotNull] IOptionsSnapshot<ProcessorOptions> processorOptions,
@@ -234,7 +126,6 @@ namespace FluentMigrator.Runner
         /// <param name="logger">The logger</param>
         /// <param name="stopWatch">The stopwatch</param>
         /// <param name="migrationRunnerConventionsAccessor">The accessor for migration runner conventions</param>
-        /// <param name="assemblySource">The assemblies to scan for migrations, etc...</param>
         /// <param name="migrationValidator">The validator for migrations</param>
         /// <param name="serviceProvider">The service provider</param>
         /// <param name="migrationScopeHandler">THe migration scope handler</param>
@@ -248,6 +139,55 @@ namespace FluentMigrator.Runner
             [NotNull] ILogger<MigrationRunner> logger,
             [NotNull] IStopWatch stopWatch,
             [NotNull] IMigrationRunnerConventionsAccessor migrationRunnerConventionsAccessor,
+            [NotNull] MigrationValidator migrationValidator,
+            [NotNull] IServiceProvider serviceProvider,
+            [CanBeNull] IMigrationScopeManager migrationScopeHandler)
+        {
+            Processor = processorAccessor.Processor;
+            Conventions = migrationRunnerConventionsAccessor.MigrationRunnerConventions;
+            ProfileLoader = profileLoader;
+            MaintenanceLoader = maintenanceLoader;
+            MigrationLoader = migrationLoader;
+
+            _serviceProvider = serviceProvider;
+            _options = options.Value;
+            _logger = logger;
+            _stopWatch = stopWatch;
+            _processorOptions = processorOptions.Value;
+
+            _migrationScopeManager = migrationScopeHandler ?? new MigrationScopeHandler(Processor, processorOptions.Value);
+            _migrationValidator = migrationValidator;
+            _versionLoader = new Lazy<IVersionLoader>(serviceProvider.GetRequiredService<IVersionLoader>);
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="MigrationRunner"/> class.
+        /// </summary>
+        /// <param name="options">The migration runner options</param>
+        /// <param name="processorOptions">The migration processor options</param>
+        /// <param name="profileLoader">The profile loader</param>
+        /// <param name="processorAccessor">The migration processor accessor</param>
+        /// <param name="maintenanceLoader">The maintenance loader</param>
+        /// <param name="migrationLoader">The migration loader</param>
+        /// <param name="logger">The logger</param>
+        /// <param name="stopWatch">The stopwatch</param>
+        /// <param name="migrationRunnerConventionsAccessor">The accessor for migration runner conventions</param>
+        /// <param name="assemblySource">The assemblies to scan for migrations, etc...</param>
+        /// <param name="migrationValidator">The validator for migrations</param>
+        /// <param name="serviceProvider">The service provider</param>
+        /// <param name="migrationScopeHandler">The migration scope handler</param>
+        [Obsolete]
+        public MigrationRunner(
+            [NotNull] IOptions<RunnerOptions> options,
+            [NotNull] IOptionsSnapshot<ProcessorOptions> processorOptions,
+            [NotNull] IProfileLoader profileLoader,
+            [NotNull] IProcessorAccessor processorAccessor,
+            [NotNull] IMaintenanceLoader maintenanceLoader,
+            [NotNull] IMigrationInformationLoader migrationLoader,
+            [NotNull] ILogger<MigrationRunner> logger,
+            [NotNull] IStopWatch stopWatch,
+            [NotNull] IMigrationRunnerConventionsAccessor migrationRunnerConventionsAccessor,
+            // ReSharper disable once UnusedParameter.Local
             [NotNull] IAssemblySource assemblySource,
             [NotNull] MigrationValidator migrationValidator,
             [NotNull] IServiceProvider serviceProvider,
@@ -268,12 +208,6 @@ namespace FluentMigrator.Runner
             _migrationScopeManager = migrationScopeHandler ?? new MigrationScopeHandler(Processor, processorOptions.Value);
             _migrationValidator = migrationValidator;
             _versionLoader = new Lazy<IVersionLoader>(serviceProvider.GetRequiredService<IVersionLoader>);
-
-#pragma warning disable 612
-#pragma warning disable 618
-            _migrationAssemblies = new AssemblyCollectionService(assemblySource);
-#pragma warning restore 618
-#pragma warning restore 612
         }
 
 #pragma warning disable 612
@@ -358,16 +292,8 @@ namespace FluentMigrator.Runner
         /// </summary>
         public void ApplyProfiles()
         {
-#pragma warning disable 612
-            if (ProfileLoader.SupportsParameterlessApplyProfile)
-            {
-                ProfileLoader.ApplyProfiles();
-#pragma warning restore 612
-            }
-            else
-            {
-                ProfileLoader.ApplyProfiles(this);
-            }
+
+            ProfileLoader.ApplyProfiles(this);
         }
 
         /// <summary>
@@ -439,7 +365,7 @@ namespace FluentMigrator.Runner
                 {
                     if (scope.IsActive)
                     {
-                        scope.Cancel();  // SQLAnywhere needs explicit call to rollback transaction
+                        scope.Cancel(); // Some Database Providers needs explicit call to rollback transaction
                     }
 
                     throw;
@@ -511,7 +437,7 @@ namespace FluentMigrator.Runner
                 {
                     if (scope.IsActive)
                     {
-                        scope.Cancel();  // SQLAnywhere needs explicit call to rollback transaction
+                        scope.Cancel(); // Some Database Providers needs explicit call to rollback transaction
                     }
 
                     throw;
@@ -566,6 +492,20 @@ namespace FluentMigrator.Runner
             return VersionLoader.VersionInfo.AppliedMigrations().Any();
         }
 
+        /// <inheritdoc />
+        public bool LoadVersionInfoIfRequired()
+        {
+            if (VersionLoader.AlreadyCreatedVersionTable && VersionLoader.AlreadyCreatedVersionSchema)
+            {
+                return false;
+            }
+            else
+            {
+                VersionLoader.LoadVersionInfo();
+                return true;
+            }
+        }
+
         /// <summary>
         /// Apply the migration using the given migration information
         /// </summary>
@@ -617,7 +557,7 @@ namespace FluentMigrator.Runner
                     {
                         if (useTransaction && scope.IsActive)
                         {
-                            scope.Cancel();  // SQLAnywhere needs explicit call to rollback transaction
+                            scope.Cancel(); // Some Database Providers needs explicit call to rollback transaction
                         }
 
                         throw;
@@ -670,7 +610,7 @@ namespace FluentMigrator.Runner
                 {
                     if (useTransaction && scope.IsActive)
                     {
-                        scope.Cancel();  // SQLAnywhere needs explicit call to rollback transaction
+                        scope.Cancel(); // Some Database Providers needs explicit call to rollback transaction
                     }
 
                     throw;
@@ -722,7 +662,7 @@ namespace FluentMigrator.Runner
                 {
                     if (scope.IsActive)
                     {
-                        scope.Cancel();  // SQLAnywhere needs explicit call to rollback transaction
+                        scope.Cancel(); // Some Database Providers needs explicit call to rollback transaction
                     }
 
                     throw;
@@ -781,7 +721,7 @@ namespace FluentMigrator.Runner
                 {
                     if (scope.IsActive)
                     {
-                        scope.Cancel();  // SQLAnywhere needs explicit call to rollback transaction
+                        scope.Cancel(); // Some Database Providers needs explicit call to rollback transaction
                     }
 
                     throw;
@@ -795,10 +735,6 @@ namespace FluentMigrator.Runner
                 VersionLoader.RemoveVersionTable();
             }
         }
-
-        /// <inheritdoc />
-        [Obsolete]
-        public IAssemblyCollection MigrationAssemblies => _migrationAssemblies;
 
         /// <inheritdoc />
         public void Up(IMigration migration)
@@ -816,21 +752,16 @@ namespace FluentMigrator.Runner
 
             if (_serviceProvider == null)
             {
-#pragma warning disable 612
-                context = new MigrationContext(Processor, _migrationAssemblies, RunnerContext?.ApplicationContext, Processor.ConnectionString);
-#pragma warning restore 612
+                throw new InvalidOperationException(
+                    $"The caller forgot to configure an {nameof(IServiceProvider)} in the constructor of this class.");
             }
-            else
-            {
-                var connectionStringAccessor = _serviceProvider.GetRequiredService<IConnectionStringAccessor>();
-                context = new MigrationContext(
-                    Processor,
-                    _serviceProvider,
-#pragma warning disable 612
-                    _options?.ApplicationContext ?? RunnerContext?.ApplicationContext,
-#pragma warning restore 612
-                    connectionStringAccessor.ConnectionString);
-            }
+            
+            var connectionStringAccessor = _serviceProvider.GetRequiredService<IConnectionStringAccessor>();
+            context = new MigrationContext(
+                Processor,
+                _serviceProvider,
+                connectionStringAccessor.ConnectionString);
+            
 
             getExpressions(migration, context);
 

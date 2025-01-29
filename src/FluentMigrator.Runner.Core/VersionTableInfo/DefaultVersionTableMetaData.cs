@@ -1,7 +1,7 @@
 #region License
 
 //
-// Copyright (c) 2007-2018, Sean Chambers <schambers80@gmail.com>
+// Copyright (c) 2007-2024, Fluent Migrator Project
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -32,11 +32,6 @@ namespace FluentMigrator.Runner.VersionTableInfo
     {
         public DefaultVersionTableMetaData(IConventionSet conventionSet, IOptions<RunnerOptions> runnerOptions)
         {
-#pragma warning disable 618
-#pragma warning disable 612
-            ApplicationContext = runnerOptions.Value.ApplicationContext;
-#pragma warning restore 612
-#pragma warning restore 618
             conventionSet.SchemaConvention?.Apply(this);
         }
 
@@ -53,17 +48,6 @@ namespace FluentMigrator.Runner.VersionTableInfo
             SchemaName = schemaName ?? string.Empty;
         }
 
-        /// <summary>
-        /// Provides access to <code>ApplicationContext</code> object.
-        /// </summary>
-        /// <remarks>
-        /// ApplicationContext value is set by FluentMigrator immediately after instantiation of a class
-        /// implementing <code>IVersionTableMetaData</code> and before any of properties of <code>IVersionTableMetaData</code>
-        /// is called. Properties can use <code>ApplicationContext</code> value to implement context-depending logic.
-        /// </remarks>
-        [Obsolete("Use dependency injection to get data using your own services")]
-        public object ApplicationContext { get; set; }
-
         public virtual string SchemaName { get; set; }
 
         public virtual string TableName => "VersionInfo";
@@ -73,6 +57,8 @@ namespace FluentMigrator.Runner.VersionTableInfo
         public virtual string UniqueIndexName => "UC_Version";
 
         public virtual string AppliedOnColumnName => "AppliedOn";
+
+        public bool CreateWithPrimaryKey => false;
 
         public virtual string DescriptionColumnName => "Description";
 

@@ -1,5 +1,5 @@
 #region License
-// Copyright (c) 2018, FluentMigrator Project
+// Copyright (c) 2018, Fluent Migrator Project
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -36,11 +36,10 @@ namespace FluentMigrator.Example.Migrator
 #if NETFRAMEWORK
                         .AddJet()
 #endif
+                        .AddSqlServer()
                         .AddSQLite()
                         .WithGlobalConnectionString(dbConfig.ConnectionString)
-                // NOTE: For now, recommend using For.All() instead of .For.Migrations() if using Maintenance Migrations
-                // https://github.com/fluentmigrator/fluentmigrator/issues/1062#issuecomment-616598419
-                        .ScanIn(typeof(AddGTDTables).Assembly).For.All())
+                        .ScanIn(typeof(AddGTDTables).Assembly).For.Migrations())
                 .Configure<SelectingProcessorAccessorOptions>(
                     opt => opt.ProcessorId = dbConfig.ProcessorId)
                 .BuildServiceProvider();

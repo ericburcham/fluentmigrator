@@ -1,6 +1,6 @@
 #region License
 
-// Copyright (c) 2007-2018, Sean Chambers <schambers80@gmail.com>
+// Copyright (c) 2007-2024, Fluent Migrator Project
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -43,7 +43,7 @@ namespace FluentMigrator.Runner.Announcers
             Write("Source Code:");
             Write("  https://github.com/fluentmigrator/fluentmigrator");
             Write("Ask For Help:");
-            Write("  https://gitter.im/FluentMigrator/fluentmigrator");
+            Write("  https://github.com/fluentmigrator/fluentmigrator/discussions");
             HorizontalRule();
             Console.ResetColor();
         }

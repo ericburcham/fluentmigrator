@@ -19,6 +19,7 @@
 using FluentMigrator.Builders.Create.Table;
 using FluentMigrator.Expressions;
 using FluentMigrator.Infrastructure;
+using FluentMigrator.Runner;
 using FluentMigrator.Runner.Generators.SQLite;
 
 using Microsoft.Extensions.DependencyInjection;
@@ -163,10 +164,11 @@ namespace FluentMigrator.Tests.Unit.Generators.SQLite
         }
 
         [Test]
-        public override void CanCreateTableWithMultiColumnPrimaryKeyWithDefaultSchema()
+        public override void CanCreateTableWithMultiColumnPrimaryKeyWithDefaultSchema([Values] CompatibilityMode compatibilityMode)
         {
             var expression = GeneratorTestHelper.GetCreateTableWithMultiColumnPrimaryKeyExpression();
 
+            Generator.CompatibilityMode = compatibilityMode;
             var result = Generator.Generate(expression);
             result.ShouldBe("CREATE TABLE \"TestTable1\" (\"TestColumn1\" TEXT NOT NULL, \"TestColumn2\" INTEGER NOT NULL, PRIMARY KEY (\"TestColumn1\", \"TestColumn2\"))");
         }
@@ -303,6 +305,15 @@ namespace FluentMigrator.Tests.Unit.Generators.SQLite
         }
 
         [Test]
+        public override void CanDropTableIfExistsWithDefaultSchema()
+        {
+            var expression = GeneratorTestHelper.GetDeleteTableIfExistsExpression();
+
+            var result = Generator.Generate(expression);
+            result.ShouldBe("DROP TABLE IF EXISTS \"TestTable1\"");
+        }
+
+        [Test]
         public override void CanRenameTableWithCustomSchema()
         {
             var expression = GeneratorTestHelper.GetRenameTableExpression();
@@ -326,7 +337,7 @@ namespace FluentMigrator.Tests.Unit.Generators.SQLite
         {
             var serviceProvider = new ServiceCollection().BuildServiceProvider();
             var querySchema = new Mock<IQuerySchema>();
-            var context = new MigrationContext(querySchema.Object, serviceProvider, null, null);
+            var context = new MigrationContext(querySchema.Object, serviceProvider, null);
 
             var expression = new CreateTableExpression()
             {

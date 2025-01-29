@@ -1,5 +1,5 @@
 #region License
-// Copyright (c) 2007-2018, Sean Chambers <schambers80@gmail.com>
+// Copyright (c) 2007-2024, Fluent Migrator Project
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -71,10 +71,6 @@ namespace FluentMigrator.Tests
 
         public static DatabaseServerOptions SqlServer2016 => GetOptions(ProcessorId.SqlServer2016);
 
-        public static DatabaseServerOptions SqlServerCe => GetOptions(ProcessorId.SqlServerCe);
-
-        public static DatabaseServerOptions SqlAnywhere16 => GetOptions(ProcessorId.SqlAnywhere16).GetOptionsForPlatform();
-
         public static DatabaseServerOptions Jet => GetOptions(ProcessorId.Jet);
 
         // ReSharper disable once InconsistentNaming
@@ -93,6 +89,8 @@ namespace FluentMigrator.Tests
         public static DatabaseServerOptions Db2ISeries => GetOptions(ProcessorId.Db2ISeries);
 
         public static DatabaseServerOptions Hana => Environment.Is64BitProcess ? GetOptions(ProcessorId.Hana) : DatabaseServerOptions.Empty;
+
+        public static DatabaseServerOptions Snowflake => GetOptions("Snowflake");
 
         public class DatabaseServerOptions
         {

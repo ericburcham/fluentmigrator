@@ -1,5 +1,5 @@
 #region License
-// Copyright (c) 2018, FluentMigrator Project
+// Copyright (c) 2018, Fluent Migrator Project
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -52,7 +52,9 @@ namespace FluentMigrator.Runner
         /// <param name="builder">The builder to add the Oracle-specific services to</param>
         private static void RegisterOracleGenerator(IMigrationRunnerBuilder builder)
         {
-            builder.Services.TryAddScoped<IOracleGenerator, OracleGenerator>();
+            builder.Services
+                .AddScoped<IOracleTypeMap>(sp => new OracleTypeMap())
+                .TryAddScoped<IOracleGenerator, OracleGenerator>();
         }
 
         /// <summary>
@@ -78,8 +80,6 @@ namespace FluentMigrator.Runner
                 .AddScoped<T>()
                 .AddScoped<OracleProcessorBase>(sp => sp.GetRequiredService<T>())
                 .AddScoped<IMigrationProcessor>(sp => sp.GetRequiredService<T>());
-
-            MigrationProcessorFactoryProvider.Register(new OracleProcessorFactory());
         }
 
         /// <summary>
@@ -97,7 +97,6 @@ namespace FluentMigrator.Runner
                 .AddScoped<OracleProcessorBase>(sp => sp.GetRequiredService<T>())
                 .AddScoped<IMigrationProcessor>(sp => sp.GetRequiredService<T>());
 
-            MigrationProcessorFactoryProvider.Register(new OracleManagedProcessorFactory());
         }
 
         /// <summary>
@@ -113,8 +112,6 @@ namespace FluentMigrator.Runner
                 .AddScoped<DotConnectOracleDbFactory>()
                 .AddScoped<T>()
                 .AddScoped<IMigrationProcessor>(sp => sp.GetRequiredService<T>());
-
-            MigrationProcessorFactoryProvider.Register(new DotConnectOracleProcessorFactory());
         }
 
         /// <summary>

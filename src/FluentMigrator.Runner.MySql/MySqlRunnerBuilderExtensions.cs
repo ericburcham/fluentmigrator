@@ -1,5 +1,5 @@
 #region License
-// Copyright (c) 2018, FluentMigrator Project
+// Copyright (c) 2018, Fluent Migrator Project
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -37,13 +37,12 @@ namespace FluentMigrator.Runner
         {
             builder.Services.TryAddScoped<MySqlDbFactory>();
             builder.Services.TryAddScoped<MySqlQuoter>();
+            builder.Services.AddScoped<IMySqlTypeMap>(sp => new MySql4TypeMap());
             builder.Services
                 .AddScoped<MySql4Processor>()
                 .AddScoped<IMigrationProcessor>(sp => sp.GetRequiredService<MySql4Processor>())
                 .AddScoped<MySql4Generator>()
                 .AddScoped<IMigrationGenerator>(sp => sp.GetRequiredService<MySql4Generator>());
-
-            MigrationProcessorFactoryProvider.Register(new MySql4ProcessorFactory());
 
             return builder;
         }
@@ -57,13 +56,31 @@ namespace FluentMigrator.Runner
         {
             builder.Services.TryAddScoped<MySqlDbFactory>();
             builder.Services.TryAddScoped<MySqlQuoter>();
+            builder.Services.AddScoped<IMySqlTypeMap>(sp => new MySql5TypeMap());
             builder.Services
                 .AddScoped<MySql5Processor>()
                 .AddScoped<IMigrationProcessor>(sp => sp.GetRequiredService<MySql5Processor>())
                 .AddScoped<MySql5Generator>()
                 .AddScoped<IMigrationGenerator>(sp => sp.GetRequiredService<MySql5Generator>());
 
-            MigrationProcessorFactoryProvider.Register(new MySql5ProcessorFactory());
+            return builder;
+        }
+
+        /// <summary>
+        /// Adds MySQL 5 support
+        /// </summary>
+        /// <param name="builder">The builder to add the MySQL 8-specific services to</param>
+        /// <returns>The migration runner builder</returns>
+        public static IMigrationRunnerBuilder AddMySql8(this IMigrationRunnerBuilder builder)
+        {
+            builder.Services.TryAddScoped<MySqlDbFactory>();
+            builder.Services.TryAddScoped<MySqlQuoter>();
+            builder.Services.AddScoped<IMySqlTypeMap>(sp => new MySql8TypeMap());
+            builder.Services
+                .AddScoped<MySql8Processor>()
+                .AddScoped<IMigrationProcessor>(sp => sp.GetRequiredService<MySql8Processor>())
+                .AddScoped<MySql8Generator>()
+                .AddScoped<IMigrationGenerator>(sp => sp.GetRequiredService<MySql8Generator>());
 
             return builder;
         }

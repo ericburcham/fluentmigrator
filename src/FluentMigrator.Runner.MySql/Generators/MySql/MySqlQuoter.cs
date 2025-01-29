@@ -1,5 +1,5 @@
 #region License
-// Copyright (c) 2007-2018, FluentMigrator Project
+// Copyright (c) 2007-2024, Fluent Migrator Project
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -48,7 +48,7 @@ namespace FluentMigrator.Runner.Generators.MySql
                 case SystemMethods.CurrentDateTime:
                     return "CURRENT_TIMESTAMP";
                 case SystemMethods.CurrentUTCDateTime:
-                    return "UTC_TIMESTAMP";
+                    return "(UTC_TIMESTAMP)";
                 case SystemMethods.CurrentUser:
                     return "CURRENT_USER()";
             }

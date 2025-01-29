@@ -515,7 +515,7 @@ namespace FluentMigrator.Tests.Unit.Generators
         {
             var serviceProvider = new ServiceCollection().BuildServiceProvider();
             var querySchema = new Mock<IQuerySchema>();
-            var context = new MigrationContext(querySchema.Object, serviceProvider, null, null);
+            var context = new MigrationContext(querySchema.Object, serviceProvider, null);
             var expr = new CreateColumnExpression
             {
                 TableName = TestTableName1,
@@ -713,6 +713,11 @@ namespace FluentMigrator.Tests.Unit.Generators
         public static DeleteTableExpression GetDeleteTableExpression()
         {
             return new DeleteTableExpression { TableName = TestTableName1 };
+        }
+
+        public static DeleteTableExpression GetDeleteTableIfExistsExpression()
+        {
+            return new DeleteTableExpression { TableName = TestTableName1, IfExists = true };
         }
 
         public static DeleteColumnExpression GetDeleteColumnExpression()

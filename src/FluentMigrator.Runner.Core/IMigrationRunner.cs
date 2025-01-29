@@ -1,5 +1,5 @@
 #region License
-// Copyright (c) 2007-2018, Sean Chambers and the FluentMigrator Project
+// Copyright (c) 2007-2024, Fluent Migrator Project
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,7 +16,6 @@
 
 using System;
 
-using FluentMigrator.Infrastructure;
 using FluentMigrator.Runner.Initialization;
 
 using JetBrains.Annotations;
@@ -39,13 +38,6 @@ namespace FluentMigrator.Runner
         /// </summary>
         [NotNull]
         IMigrationInformationLoader MigrationLoader { get; }
-
-        /// <summary>
-        /// Gets the assemblies searched for migrations, profile migrations, etc...
-        /// </summary>
-        [Obsolete]
-        [CanBeNull]
-        IAssemblyCollection MigrationAssemblies { get; }
 
         /// <summary>
         /// Gets the runner context
@@ -127,5 +119,11 @@ namespace FluentMigrator.Runner
         /// </summary>
         /// <returns><c>true</c> when there are migrations available for a rollback</returns>
         bool HasMigrationsToApplyRollback();
+
+        /// <summary>
+        /// Creates the required version info database tables
+        /// </summary>
+        /// <returns><c>true</c> if the table had to be created or <c>false</c> when it already existed</returns>
+        bool LoadVersionInfoIfRequired();
     }
 }

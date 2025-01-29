@@ -1,5 +1,6 @@
 using System;
 
+using FluentMigrator.Runner;
 using FluentMigrator.Runner.Generators.MySql;
 
 using NUnit.Framework;
@@ -9,6 +10,8 @@ using Shouldly;
 namespace FluentMigrator.Tests.Unit.Generators.MySql4
 {
     [TestFixture]
+    [Category("Table")]
+    [Category("MySql4")]
     public class MySql4TableTests : BaseTableTests
     {
         protected MySql4Generator Generator;
@@ -135,10 +138,11 @@ namespace FluentMigrator.Tests.Unit.Generators.MySql4
         }
 
         [Test]
-        public override void CanCreateTableWithMultiColumnPrimaryKeyWithDefaultSchema()
+        public override void CanCreateTableWithMultiColumnPrimaryKeyWithDefaultSchema([Values] CompatibilityMode compatibilityMode)
         {
             var expression = GeneratorTestHelper.GetCreateTableWithMultiColumnPrimaryKeyExpression();
 
+            Generator.CompatibilityMode = compatibilityMode;
             var result = Generator.Generate(expression);
             result.ShouldBe("CREATE TABLE `TestTable1` (`TestColumn1` VARCHAR(255) NOT NULL, `TestColumn2` INTEGER NOT NULL, PRIMARY KEY (`TestColumn1`, `TestColumn2`)) ENGINE = INNODB");
         }
@@ -238,6 +242,15 @@ namespace FluentMigrator.Tests.Unit.Generators.MySql4
 
             var result = Generator.Generate(expression);
             result.ShouldBe("DROP TABLE `TestTable1`");
+        }
+
+        [Test]
+        public override void CanDropTableIfExistsWithDefaultSchema()
+        {
+            var expression = GeneratorTestHelper.GetDeleteTableIfExistsExpression();
+
+            var result = Generator.Generate(expression);
+            result.ShouldBe("DROP TABLE IF EXISTS `TestTable1`");
         }
 
         [Test]

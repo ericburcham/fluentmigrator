@@ -20,7 +20,7 @@ using FluentMigrator.Runner.Helpers;
 
 #region License
 //
-// Copyright (c) 2007-2018, Sean Chambers <schambers80@gmail.com>
+// Copyright (c) 2007-2024, Fluent Migrator Project
 // Copyright (c) 2010, Nathan Brown
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -63,12 +63,6 @@ namespace FluentMigrator.Runner.Processors.SqlServer
     {
         [CanBeNull]
         private readonly IServiceProvider _serviceProvider;
-
-        [Obsolete]
-        public SqlServer2000Processor(IDbConnection connection, IMigrationGenerator generator, IAnnouncer announcer, IMigrationProcessorOptions options, IDbFactory factory)
-            : base(connection, factory, generator, announcer, options)
-        {
-        }
 
         public SqlServer2000Processor(
             [NotNull] ILogger<SqlServer2000Processor> logger,
@@ -241,7 +235,7 @@ namespace FluentMigrator.Runner.Processors.SqlServer
                 }
                 catch (Exception ex)
                 {
-                    using (var message = new StringWriter())
+                    using (_ = new StringWriter())
                     {
                         ReThrowWithSql(ex, sql);
                     }

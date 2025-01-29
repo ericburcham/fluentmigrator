@@ -14,12 +14,6 @@ namespace FluentMigrator.Runner.Generators.Generic
 {
     public abstract class GenericGenerator : GeneratorBase
     {
-        [Obsolete("Use the CompatibilityMode property")]
-        // ReSharper disable once InconsistentNaming
-#pragma warning disable 618
-        public CompatabilityMode compatabilityMode;
-#pragma warning restore 618
-
         protected GenericGenerator(
             IColumn column,
             IQuoter quoter,
@@ -30,16 +24,11 @@ namespace FluentMigrator.Runner.Generators.Generic
             CompatibilityMode = generatorOptions.Value.CompatibilityMode ?? CompatibilityMode.LOOSE;
         }
 
-#pragma warning disable 618, 3005
-        public CompatibilityMode CompatibilityMode
-        {
-            get => (CompatibilityMode) compatabilityMode;
-            set => compatabilityMode = (CompatabilityMode) value;
-        }
-#pragma warning restore 618, 3005
+        public CompatibilityMode CompatibilityMode { get; set; }
 
         public virtual string CreateTable { get { return "CREATE TABLE {0} ({1})"; } }
         public virtual string DropTable { get { return "DROP TABLE {0}"; } }
+        public virtual string DropTableIfExists { get { return "DROP TABLE IF EXISTS {0}"; } }
 
         public virtual string AddColumn { get { return "ALTER TABLE {0} ADD COLUMN {1}"; } }
         public virtual string DropColumn { get { return "ALTER TABLE {0} DROP COLUMN {1}"; } }
@@ -87,7 +76,7 @@ namespace FluentMigrator.Runner.Generators.Generic
 
             if (expression.Columns.Count == 0)
             {
-                throw new ArgumentException("You must specifiy at least one column");
+                throw new ArgumentException("You must specify at least one column");
             }
 
             var quotedTableName = Quoter.QuoteTableName(expression.TableName, expression.SchemaName);
@@ -103,6 +92,10 @@ namespace FluentMigrator.Runner.Generators.Generic
 
         public override string Generate(DeleteTableExpression expression)
         {
+            if (expression.IfExists)
+            {
+                return String.Format(DropTableIfExists, Quoter.QuoteTableName(expression.TableName));
+            }
             return string.Format(DropTable, Quoter.QuoteTableName(expression.TableName, expression.SchemaName));
         }
 
@@ -299,7 +292,7 @@ namespace FluentMigrator.Runner.Generators.Generic
                             "The following database specific additional features are not supported in strict mode [{0}]",
                             unsupportedFeatures.Aggregate((x, y) => x + ", " + y));
                     {
-                        return CompatibilityMode.HandleCompatibilty(errorMessage);
+                        return CompatibilityMode.HandleCompatibility(errorMessage);
                     }
                 }
             }
@@ -311,25 +304,64 @@ namespace FluentMigrator.Runner.Generators.Generic
             var updateItems = new List<string>();
             var whereClauses = new List<string>();
 
-            foreach (var item in expression.Set)
-            {
-                updateItems.Add(string.Format("{0} = {1}", Quoter.QuoteColumnName(item.Key), Quoter.QuoteValue(item.Value)));
-            }
+            GenerateUpdateSet(expression, updateItems);
 
-            if(expression.IsAllRows)
+            if (expression.IsAllRows)
             {
                 whereClauses.Add("1 = 1");
             }
             else
             {
-                foreach (var item in expression.Where)
-                {
-                    var op = item.Value == null || item.Value == DBNull.Value ? "IS" : "=";
-                    whereClauses.Add(string.Format("{0} {1} {2}", Quoter.QuoteColumnName(item.Key),
-                                                   op, Quoter.QuoteValue(item.Value)));
-                }
+                GenerateWhere(expression.Where, whereClauses);
             }
+
             return string.Format(UpdateData, Quoter.QuoteTableName(expression.TableName, expression.SchemaName), string.Join(", ", updateItems.ToArray()), string.Join(" AND ", whereClauses.ToArray()));
+        }
+
+        /// <summary>
+        /// Generates the SET clause for UPDATE statements
+        /// </summary>
+        /// <param name="expression">The Update expression with a SET</param>
+        /// <param name="updateItems">The key value pair that is going to be populated</param>
+        protected virtual void GenerateUpdateSet(UpdateDataExpression expression, List<string> updateItems)
+        {
+            foreach (var item in expression.Set)
+            {
+                var leftPart = item.Key == "" ? "" : $"{Quoter.QuoteColumnName(item.Key)} = ";
+
+                updateItems.Add($"{leftPart}{Quoter.QuoteValue(item.Value)}");
+            }
+        }
+
+        /// <summary>
+        /// Generates the WHERE clause for UPDATE and DELETE statements
+        /// </summary>
+        /// <param name="where">The where expression</param>
+        /// <param name="whereClauses">The key value pair that is going to be populated</param>
+        protected virtual void GenerateWhere(List<KeyValuePair<string, object>> where, List<string> whereClauses)
+        {
+            foreach (var item in where)
+            {
+                string op;
+
+                if (item.Value == null || item.Value == DBNull.Value)
+                {
+                    op = "IS ";
+                }
+                else if (item.Value is RawSql)
+                {
+                    op = "";
+                }
+                else
+                {
+                    op = "= ";
+                }
+
+                // When the key is an empty string it means the value will contain the column name
+                var columnName = item.Key == "" ? "" : $"{Quoter.QuoteColumnName(item.Key)} ";
+
+                whereClauses.Add($"{columnName}{op}{Quoter.QuoteValue(item.Value)}");
+            }
         }
 
         public override string Generate(DeleteDataExpression expression)
@@ -345,16 +377,8 @@ namespace FluentMigrator.Runner.Generators.Generic
                 foreach (var row in expression.Rows)
                 {
                     var whereClauses = new List<string>();
-                    foreach (KeyValuePair<string, object> item in row)
-                    {
-                        var op = item.Value == null || item.Value == DBNull.Value ? "IS" : "=";
-                        whereClauses.Add(
-                            string.Format(
-                                "{0} {1} {2}",
-                                Quoter.QuoteColumnName(item.Key),
-                                op,
-                                Quoter.QuoteValue(item.Value)));
-                    }
+
+                    GenerateWhere(row, whereClauses);
 
                     deleteItems.Add(string.Format(DeleteData, Quoter.QuoteTableName(expression.TableName, expression.SchemaName), string.Join(" AND ", whereClauses.ToArray())));
                 }
@@ -377,17 +401,17 @@ namespace FluentMigrator.Runner.Generators.Generic
         //All Schema method throw by default as only Sql server 2005 and up supports them.
         public override string Generate(CreateSchemaExpression expression)
         {
-            return CompatibilityMode.HandleCompatibilty("Schemas are not supported");
+            return CompatibilityMode.HandleCompatibility("Schemas are not supported");
         }
 
         public override string Generate(DeleteSchemaExpression expression)
         {
-            return CompatibilityMode.HandleCompatibilty("Schemas are not supported");
+            return CompatibilityMode.HandleCompatibility("Schemas are not supported");
         }
 
         public override string Generate(AlterSchemaExpression expression)
         {
-            return CompatibilityMode.HandleCompatibilty("Schemas are not supported");
+            return CompatibilityMode.HandleCompatibility("Schemas are not supported");
         }
 
         public override string Generate(CreateSequenceExpression expression)
@@ -421,7 +445,7 @@ namespace FluentMigrator.Runner.Generators.Generic
             {
                 if (seq.Cache.Value < MINIMUM_CACHE_VALUE)
                 {
-                    return CompatibilityMode.HandleCompatibilty("Cache size must be greater than 1; if you intended to disable caching, set Cache to null.");
+                    return CompatibilityMode.HandleCompatibility("Cache size must be greater than 1; if you intended to disable caching, set Cache to null.");
                 }
                 result.AppendFormat(" CACHE {0}", seq.Cache);
             }
