@@ -14,7 +14,7 @@
 // limitations under the License.
 #endregion
 
-using System.Linq;
+using System.Collections.Generic;
 using System.Text;
 
 using FluentMigrator.Expressions;
@@ -120,9 +120,19 @@ namespace FluentMigrator.Runner.Generators.MySql
                 query.Append(column.Direction == Direction.Ascending ? " ASC" : " DESC");
             }
 
-            return query.Append(");")
-                .ToString();
+            query.Append(")");
+
+            return FormatStatement(query.ToString());
         }
+
+        /// <inheritdoc />
+        public override string GeneratorId => GeneratorIdConstants.MySql8;
+
+        /// <inheritdoc />
+        public override List<string> GeneratorIdAliases =>
+        [
+            GeneratorIdConstants.MySql8, GeneratorIdConstants.MySql, GeneratorIdConstants.MariaDB
+        ];
 
 
         protected virtual IndexType GetIndexType(CreateIndexExpression expression)
@@ -138,7 +148,7 @@ namespace FluentMigrator.Runner.Generators.MySql
         }
         public override string Generate(RenameColumnExpression expression)
         {
-            return string.Format("ALTER TABLE {0} CHANGE {1} {2} ", Quoter.QuoteTableName(expression.TableName), Quoter.QuoteColumnName(expression.OldName), Quoter.QuoteColumnName(expression.NewName));
+            return FormatStatement(RenameColumn, Quoter.QuoteTableName(expression.TableName), Quoter.QuoteColumnName(expression.OldName), Quoter.QuoteColumnName(expression.NewName));
         }
     }
 }

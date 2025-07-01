@@ -17,6 +17,7 @@
 //
 #endregion
 
+using System.Collections.Generic;
 using System.Text;
 
 using JetBrains.Annotations;
@@ -53,6 +54,14 @@ namespace FluentMigrator.Runner.Generators.SqlServer
             : base(column, quoter, descriptionGenerator, generatorOptions)
         {
         }
+
+
+        /// <inheritdoc />
+        public override string GeneratorId => GeneratorIdConstants.SqlServer2012;
+
+        /// <inheritdoc />
+        public override List<string> GeneratorIdAliases =>
+            [GeneratorIdConstants.SqlServer2012, GeneratorIdConstants.SqlServer];
 
         public override string Generate(Expressions.CreateSequenceExpression expression)
         {
@@ -99,12 +108,14 @@ namespace FluentMigrator.Runner.Generators.SqlServer
                 result.Append(" CYCLE");
             }
 
+            AppendSqlStatementEndToken(result);
+
             return result.ToString();
         }
 
         public override string Generate(Expressions.DeleteSequenceExpression expression)
         {
-            return $"DROP SEQUENCE {Quoter.QuoteSequenceName(expression.SequenceName, expression.SchemaName)}";
+            return FormatStatement("DROP SEQUENCE {0}", Quoter.QuoteSequenceName(expression.SequenceName, expression.SchemaName));
         }
     }
 }
