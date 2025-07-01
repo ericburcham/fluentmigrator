@@ -1,7 +1,7 @@
 #region License
-// 
-// Copyright (c) 2007-2009, Sean Chambers <schambers80@gmail.com>
-// 
+//
+// Copyright (c) 2007-2024, Fluent Migrator Project
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -17,54 +17,48 @@
 #endregion
 
 using System.Collections.Generic;
-using System.ComponentModel;
 using FluentMigrator.Expressions;
-using FluentMigrator.Infrastructure;
 
 namespace FluentMigrator.Builders.Update
 {
-    public class UpdateDataExpressionBuilder : IUpdateSetOrInSchemaSyntax,
+    /// <summary>
+    /// An expression builder for a <see cref="UpdateDataExpression"/>
+    /// </summary>
+    public class UpdateDataExpressionBuilder : ExpressionBuilderBase<UpdateDataExpression>, IUpdateSetOrInSchemaSyntax,
         IUpdateWhereSyntax
     {
-        private readonly UpdateDataExpression _expression;
-        private readonly IMigrationContext _context;
-
-        public UpdateDataExpressionBuilder(UpdateDataExpression expression, IMigrationContext context)
+        /// <summary>
+        /// Initializes a new instance of the <see cref="UpdateDataExpressionBuilder"/> class.
+        /// </summary>
+        /// <param name="expression">The underlying expression</param>
+        public UpdateDataExpressionBuilder(UpdateDataExpression expression) : base(expression)
         {
-            _context = context;
-            _expression = expression;
         }
 
+        /// <inheritdoc />
         public IUpdateSetSyntax InSchema(string schemaName)
         {
-            _expression.SchemaName = schemaName;
+            Expression.SchemaName = schemaName;
             return this;
         }
 
+        /// <inheritdoc />
         public IUpdateWhereSyntax Set(object dataAsAnonymousType)
         {
-            _expression.Set = GetData(dataAsAnonymousType);
+            Expression.Set = GetData<List<KeyValuePair<string, object>>>(dataAsAnonymousType);
             return this;
         }
 
+        /// <inheritdoc />
         public void Where(object dataAsAnonymousType)
         {
-            _expression.Where = GetData(dataAsAnonymousType);
+            Expression.Where = GetData<List<KeyValuePair<string, object>>>(dataAsAnonymousType);
         }
 
+        /// <inheritdoc />
         public void AllRows()
         {
-            _expression.IsAllRows = true;
-        }
-
-        private static List<KeyValuePair<string, object>> GetData(object dataAsAnonymousType)
-        {
-            var data = new List<KeyValuePair<string, object>>();
-            var properties = TypeDescriptor.GetProperties(dataAsAnonymousType);
-
-            foreach (PropertyDescriptor property in properties)
-                data.Add(new KeyValuePair<string, object>(property.Name, property.GetValue(dataAsAnonymousType)));
-            return data;
+            Expression.IsAllRows = true;
         }
     }
 }

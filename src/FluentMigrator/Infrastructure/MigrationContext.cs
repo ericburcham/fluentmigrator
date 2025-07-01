@@ -1,7 +1,7 @@
 #region License
-// 
-// Copyright (c) 2007-2009, Sean Chambers <schambers80@gmail.com>
-// 
+//
+// Copyright (c) 2007-2024, Fluent Migrator Project
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -16,35 +16,50 @@
 //
 #endregion
 
+using System;
 using System.Collections.Generic;
+
 using FluentMigrator.Expressions;
-using System.Reflection;
+
+using JetBrains.Annotations;
+
 
 namespace FluentMigrator.Infrastructure
 {
+    /// <summary>
+    /// The default implementation of the <see cref="IMigrationContext"/>
+    /// </summary>
     public class MigrationContext : IMigrationContext
     {
-        public virtual IMigrationConventions Conventions { get; set; }
-        public virtual ICollection<IMigrationExpression> Expressions { get; set; }
-        public virtual IQuerySchema QuerySchema { get; set; }
-        public virtual IAssemblyCollection MigrationAssemblies { get; set; }
 
-        /// <summary>The arbitrary application context passed to the task runner.</summary>
-        public virtual object ApplicationContext { get; set; }
 
         /// <summary>
-        /// Connection String from the runner.
+        /// Initializes a new instance of the <see cref="MigrationContext"/> class.
         /// </summary>
+        /// <param name="querySchema">The provider used to query the database</param>
+        /// <param name="serviceProvider">The service provider</param>
+        /// <param name="connection">The database connection</param>
+        public MigrationContext(
+            [NotNull] IQuerySchema querySchema,
+            [NotNull] IServiceProvider serviceProvider,
+            string connection)
+        {
+            // ReSharper disable once VirtualMemberCallInConstructor
+            QuerySchema = querySchema;
+            Connection = connection;
+            ServiceProvider = serviceProvider;
+        }
+
+        /// <inheritdoc />
+        public virtual ICollection<IMigrationExpression> Expressions { get; set; } = new List<IMigrationExpression>();
+
+        /// <inheritdoc />
+        public virtual IQuerySchema QuerySchema { get; set; }
+
+        /// <inheritdoc />
         public string Connection { get; set; }
 
-        public MigrationContext(IMigrationConventions conventions, IQuerySchema querySchema, IAssemblyCollection migrationAssemblies, object context, string connection)
-        {
-            Conventions = conventions;
-            Expressions = new List<IMigrationExpression>();
-            QuerySchema = querySchema;
-            MigrationAssemblies = migrationAssemblies;
-            this.ApplicationContext = context;
-            this.Connection = connection;
-        }
+        /// <inheritdoc />
+        public IServiceProvider ServiceProvider { get; }
     }
 }

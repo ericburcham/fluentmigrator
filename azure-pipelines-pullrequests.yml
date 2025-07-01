@@ -1,0 +1,67 @@
+# ASP.NET Core (.NET Framework)
+# Build and test ASP.NET Core projects targeting the full .NET Framework.
+# Add steps that publish symbols, save build artifacts, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/languages/dotnet-core
+
+# According to https://learn.microsoft.com/en-us/azure/devops/pipelines/repos/github?view=azure-devops&tabs=yaml#opting-out-of-ci
+# setting `trigger: none` opts out of CI triggers entirely.
+# trigger: none
+
+pr:
+  branches:
+    include:
+    - '*'
+    exclude:
+    - archive*
+
+pool:
+  vmImage: 'windows-latest'
+
+variables:
+  solution: '**/FluentMigrator.sln'
+  buildPlatform: 'Any CPU'
+  buildConfiguration: 'Release'
+
+steps:
+- task: NuGetToolInstaller@1
+
+- checkout: self
+  clean: true
+  fetchDepth: 0
+  fetchTags: true
+
+- task: gitversion/setup@0
+  displayName: 'Install GitVersion (using GitTools 0.10.2.23031113 or later)'
+  inputs:
+    versionSpec: '5.12'
+    includePrerelease: true
+
+- task: gitversion/execute@0
+  displayName: 'Execute GitVersion (using GitTools 0.10.2.23031113 or later)'
+  inputs:
+    updateAssemblyInfo: false
+  env:
+      BUILD_BUILDNUMBER: $(GitVersion.NuGetVersionV2)
+
+- task: NuGetCommand@2
+  inputs:
+    restoreSolution: '$(solution)'
+
+- task: VSBuild@1
+  inputs:
+    solution: '$(solution)'
+    platform: '$(buildPlatform)'
+    configuration: '$(buildConfiguration)'
+    msbuildArgs: '/p:Version="$(build.buildNumber)"'
+
+- task: VSTest@2
+  inputs:
+    platform: '$(buildPlatform)'
+    configuration: '$(buildConfiguration)'
+    diagnosticsEnabled: true
+
+- task: PublishBuildArtifacts@1
+  inputs:
+    PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+    ArtifactName: 'drop'
+    publishLocation: 'Container'

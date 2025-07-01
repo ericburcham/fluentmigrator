@@ -1,0 +1,63 @@
+version: 2
+updates:
+- package-ecosystem: nuget
+  groups:
+    database-driver-dependencies:
+      patterns:
+        - "*Sqlite*"
+        - "*Pgsql*"
+        - "Microsoft.Data.SqlClient"
+        - "*Firebird*"
+        - "Oracle.ManagedDataAccess" # .NET Framework dependency for FluentMigrator.Console
+        - "Oracle.ManagedDataAccess.Core" # .NET dependency for FluentMigrator.DotNet.Cli
+        - "*Sql*"
+        - "Snowflake*"
+    # Dependency Injection and Microsoft Out-of-Box Dependencies (not included in the SDK)
+    core-dependencies:
+      patterns:
+        - "Autofac*"
+        # There may be a bug in dependabot with wildcards, so enumerating all "Microsoft.Extensions*" packages below
+        - "Microsoft.Extensions.Configuration.Abstractions"
+        - "Microsoft.Extensions.Configuration.Binder"
+        - "Microsoft.Extensions.Configuration.EnvironmentVariables"
+        - "Microsoft.Extensions.Configuration.UserSecrets"
+        - "Microsoft.Extensions.DependencyInjection"
+        - "Microsoft.Extensions.Logging"
+        - "Microsoft.Extensions.Logging.Console"
+        - "Microsoft.Extensions.Logging.Debug"
+        - "Microsoft.Extensions.Options"
+        - "Microsoft.Extensions.Options.ConfigurationExtensions"
+        
+    test-dependencies:
+      patterns:
+        - "Moq"
+        - "NUnit*"
+        - "Shouldly"
+        - "Microsoft.NET.Test.Sdk"
+        - "Brutal.Dev.StrongNameSigner"
+        - "Testcontainers*"
+    runner-dependencies:
+      patterns:
+        - "McMaster.Extensions.CommandLineUtils"
+        - "AutoMapper"
+    packaging-dependencies:
+      patterns:
+        - "SourceLink*"
+    sample-code-dependencies:
+      patterns:
+        - "FluentMigrator*"
+    other-dependencies:
+      patterns:
+        - "FSharp*"
+        - "JetBrains.Annotations"
+  directory: "/"
+  schedule:
+    interval: daily
+  open-pull-requests-limit: 20
+  reviewers:
+    - jzabroski
+  ignore:
+    # Don't update ourselves, even for the Sample project
+    - dependency-name: FluentMigrator
+      versions:
+        - 5.0.0
